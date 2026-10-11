@@ -14,6 +14,9 @@ connectDB();
 
 const app = express();
 
+// Enable proxy trust for reverse proxy deployments (Back4App, Render, Docker SSL termination)
+app.set('trust proxy', 1);
+
 // Middleware: CORS
 app.use(
   cors({
@@ -22,7 +25,7 @@ app.use(
   })
 );
 
-// Middleware: Body parsers (support up to 8 uploaded images)
+// Middleware: Body parsers (support up to 50MB payload)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -30,7 +33,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/web_review_hub';
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'web_review_hub_secret_key',
+    secret: process.env.SESSION_SECRET || 'honne_secure_secret_key_default',
     resave: false,
     saveUninitialized: false,
     store: (MongoStore.create ? MongoStore : MongoStore.default).create({
@@ -39,10 +42,10 @@ app.use(
       ttl: 14 * 24 * 60 * 60 // 14 days
     }),
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
+      sameSite: 'lax',
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
     }
   })
 );

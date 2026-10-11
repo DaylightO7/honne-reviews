@@ -43,14 +43,17 @@ router.post('/register', async (req, res, next) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      avatarUrl: user.avatarUrl || '/images/default-avatar.png',
+      avatarUrl: user.avatarUrl || '/images/default-avatar.svg',
       bio: user.bio || ''
     };
 
-    return res.status(201).json({
-      success: true,
-      message: 'User registered successfully',
-      user: req.session.user
+    req.session.save((err) => {
+      if (err) console.error('Session save error on register:', err);
+      return res.status(201).json({
+        success: true,
+        message: 'User registered successfully',
+        user: req.session.user
+      });
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -100,14 +103,17 @@ router.post('/login', async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      avatarUrl: user.avatarUrl || '/images/default-avatar.png',
+      avatarUrl: user.avatarUrl || '/images/default-avatar.svg',
       bio: user.bio || ''
     };
 
-    return res.json({
-      success: true,
-      message: 'Login successful',
-      user: req.session.user
+    req.session.save((err) => {
+      if (err) console.error('Session save error on login:', err);
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        user: req.session.user
+      });
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -162,14 +168,17 @@ router.post('/admin-login', async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      avatarUrl: user.avatarUrl || '/images/default-avatar.png',
+      avatarUrl: user.avatarUrl || '/images/default-avatar.svg',
       bio: user.bio || ''
     };
 
-    return res.json({
-      success: true,
-      message: 'Admin authentication successful',
-      user: req.session.user
+    req.session.save((err) => {
+      if (err) console.error('Session save error on admin login:', err);
+      return res.json({
+        success: true,
+        message: 'Admin authentication successful',
+        user: req.session.user
+      });
     });
   } catch (error) {
     console.error('Admin login error:', error);
@@ -211,13 +220,22 @@ router.post('/logout', (req, res) => {
  * @route   GET /api/auth/me
  * @desc    Get currently authenticated user from session with fresh DB sync
  */
-router.get('/me', isAuthenticated, async (req, res) => {
+router.get('/me', async (req, res) => {
   try {
-    const userId = req.session?.user?.id || req.session?.userId;
+    const userId = req.session?.user?.id || req.session?.user?._id || req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        user: null,
+        message: 'No active session.'
+      });
+    }
+
     const user = await User.findById(userId).select('-password');
     if (!user) {
       return res.status(401).json({
         success: false,
+        user: null,
         message: 'User session invalid.'
       });
     }
@@ -228,7 +246,7 @@ router.get('/me', isAuthenticated, async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      avatarUrl: user.avatarUrl || '/images/default-avatar.png',
+      avatarUrl: user.avatarUrl || '/images/default-avatar.svg',
       bio: user.bio || ''
     };
 
@@ -237,9 +255,15 @@ router.get('/me', isAuthenticated, async (req, res) => {
       user: req.session.user
     });
   } catch (err) {
-    return res.json({
-      success: true,
-      user: req.session.user
+    if (req.session?.user) {
+      return res.json({
+        success: true,
+        user: req.session.user
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: 'Server error retrieving session.'
     });
   }
 });

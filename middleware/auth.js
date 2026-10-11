@@ -4,7 +4,7 @@
 
 // Verify that the user has an active session
 const isAuthenticated = (req, res, next) => {
-  if (req.session && req.session.user) {
+  if (req.session && (req.session.user || req.session.userId)) {
     return next();
   }
   return res.status(401).json({
