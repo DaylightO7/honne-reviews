@@ -222,11 +222,20 @@ function createReviewCard(review) {
   card.style.marginBottom = '1.25rem';
 
   const product = review.product || {};
+  const productName = escapeHtml(product.name || 'View Product');
   const formattedDate = new Date(review.createdAt).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
   });
+
+  // Determine thumbnail in order of priority: product image -> product.images[0] -> review.images[0]
+  const thumbnailCandidate = review.product?.image || (review.product?.images && review.product.images[0]) || review.product?.imageUrl || (review.images && review.images[0]) || null;
+  const thumbnail = (thumbnailCandidate && thumbnailCandidate !== '/images/default-gadget.svg' && String(thumbnailCandidate).trim() !== '') ? thumbnailCandidate : null;
+
+  const badgeContent = thumbnail
+    ? `<img src="${thumbnail}" alt="${productName}" class="product-badge-thumb" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'fallback-icon\\'>💻</span>';">`
+    : `<span class="fallback-icon">💻</span>`;
 
   // Images gallery
   let photosHtml = '';
@@ -245,11 +254,13 @@ function createReviewCard(review) {
   card.innerHTML = `
     <!-- Product Header Link -->
     <div class="review-product-header">
-      <img src="${product.imageUrl || '/images/default-gadget.svg'}" alt="${escapeHtml(product.name)}" class="review-product-thumb" onerror="this.src='/images/default-gadget.svg'">
+      <div class="product-badge-container">
+        ${badgeContent}
+      </div>
       <div style="flex: 1; min-width: 0;">
         <div style="font-size: 0.75rem; color: var(--primary); font-weight: 700; text-transform: uppercase;">${escapeHtml(product.category || 'Gadget')}</div>
         <a href="product.html?id=${product._id}" style="font-weight: 700; color: var(--text-primary); font-size: 1rem; text-decoration: none;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-primary)'">
-          ${escapeHtml(product.name || 'View Product')}
+          ${productName}
         </a>
       </div>
       <div class="review-action-btns">

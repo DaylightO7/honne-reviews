@@ -186,35 +186,53 @@ router.post('/avatar', isAuthenticated, (req, res, next) => {
 
 /**
  * @route   GET /api/users/my-reviews
+ * @route   GET /api/users/me/reviews
  * @desc    Get all reviews authored by the logged-in user
  */
-router.get('/my-reviews', isAuthenticated, async (req, res) => {
+const getMyReviewsHandler = async (req, res) => {
   try {
     const userId = req.session.user?.id || req.session.userId;
     const reviews = await Review.find({ user: userId })
-      .populate('product', 'name brand category imageUrl price')
+      .populate('product', 'name brand category imageUrl images price')
       .sort({ createdAt: -1 });
 
-    const formattedReviews = reviews.map(r => ({
-      _id: r._id,
-      product: r.product ? {
-        _id: r.product._id,
-        name: r.product.name,
-        brand: r.product.brand,
-        category: r.product.category,
-        imageUrl: r.product.imageUrl || '/images/default-gadget.svg',
-        price: r.product.price || 0
-      } : { _id: null, name: 'Product Unlisted', brand: '', category: '', imageUrl: '/images/default-gadget.svg', price: 0 },
-      heading: r.heading || '',
-      comment: r.comment,
-      rating: r.rating,
-      images: r.images || [],
-      likesCount: (r.likes || []).length,
-      dislikesCount: (r.dislikes || []).length,
-      netScore: (r.likes || []).length - (r.dislikes || []).length,
-      isRemoved: r.isRemoved || false,
-      createdAt: r.createdAt
-    }));
+    const formattedReviews = reviews.map(r => {
+      const prodThumb = (r.product?.imageUrl && r.product.imageUrl !== '/images/default-gadget.svg' && r.product.imageUrl.trim() !== '')
+        ? r.product.imageUrl
+        : ((r.product?.images && r.product.images.length > 0 && r.product.images[0]) || (r.images && r.images.length > 0 && r.images[0]) || '');
+
+      return {
+        _id: r._id,
+        product: r.product ? {
+          _id: r.product._id,
+          name: r.product.name,
+          brand: r.product.brand,
+          category: r.product.category,
+          imageUrl: prodThumb || r.product.imageUrl || '',
+          image: prodThumb || r.product.imageUrl || '',
+          images: r.product.images || [],
+          price: r.product.price || 0
+        } : {
+          _id: null,
+          name: 'Product Unlisted',
+          brand: '',
+          category: '',
+          imageUrl: (r.images && r.images[0]) || '',
+          image: (r.images && r.images[0]) || '',
+          images: [],
+          price: 0
+        },
+        heading: r.heading || '',
+        comment: r.comment,
+        rating: r.rating,
+        images: r.images || [],
+        likesCount: (r.likes || []).length,
+        dislikesCount: (r.dislikes || []).length,
+        netScore: (r.likes || []).length - (r.dislikes || []).length,
+        isRemoved: r.isRemoved || false,
+        createdAt: r.createdAt
+      };
+    });
 
     return res.json({
       success: true,
@@ -225,7 +243,10 @@ router.get('/my-reviews', isAuthenticated, async (req, res) => {
     console.error('Fetch my-reviews error:', error);
     return res.status(500).json({ success: false, message: 'Server error fetching user reviews.' });
   }
-});
+};
+
+router.get('/my-reviews', isAuthenticated, getMyReviewsHandler);
+router.get('/me/reviews', isAuthenticated, getMyReviewsHandler);
 
 /**
  * @route   GET /api/users/:id
@@ -246,31 +267,48 @@ router.get('/:id', async (req, res) => {
       user: user._id,
       isRemoved: { $ne: true }
     })
-      .populate('product', 'name brand category imageUrl price')
+      .populate('product', 'name brand category imageUrl images price')
       .sort({ createdAt: -1 });
 
     const totalLikes = reviews.reduce((sum, r) => sum + (r.likes ? r.likes.length : 0), 0);
     const totalDislikes = reviews.reduce((sum, r) => sum + (r.dislikes ? r.dislikes.length : 0), 0);
 
-    const publicReviews = reviews.map(r => ({
-      _id: r._id,
-      product: r.product ? {
-        _id: r.product._id,
-        name: r.product.name,
-        brand: r.product.brand,
-        category: r.product.category,
-        imageUrl: r.product.imageUrl || '/images/default-gadget.svg',
-        price: r.product.price || 0
-      } : { _id: null, name: 'Product Unlisted', brand: '', category: '', imageUrl: '/images/default-gadget.svg', price: 0 },
-      heading: r.heading || '',
-      comment: r.comment,
-      rating: r.rating,
-      images: r.images || [],
-      likesCount: (r.likes || []).length,
-      dislikesCount: (r.dislikes || []).length,
-      netScore: (r.likes || []).length - (r.dislikes || []).length,
-      createdAt: r.createdAt
-    }));
+    const publicReviews = reviews.map(r => {
+      const prodThumb = (r.product?.imageUrl && r.product.imageUrl !== '/images/default-gadget.svg' && r.product.imageUrl.trim() !== '')
+        ? r.product.imageUrl
+        : ((r.product?.images && r.product.images.length > 0 && r.product.images[0]) || (r.images && r.images.length > 0 && r.images[0]) || '');
+
+      return {
+        _id: r._id,
+        product: r.product ? {
+          _id: r.product._id,
+          name: r.product.name,
+          brand: r.product.brand,
+          category: r.product.category,
+          imageUrl: prodThumb || r.product.imageUrl || '',
+          image: prodThumb || r.product.imageUrl || '',
+          images: r.product.images || [],
+          price: r.product.price || 0
+        } : {
+          _id: null,
+          name: 'Product Unlisted',
+          brand: '',
+          category: '',
+          imageUrl: (r.images && r.images[0]) || '',
+          image: (r.images && r.images[0]) || '',
+          images: [],
+          price: 0
+        },
+        heading: r.heading || '',
+        comment: r.comment,
+        rating: r.rating,
+        images: r.images || [],
+        likesCount: (r.likes || []).length,
+        dislikesCount: (r.dislikes || []).length,
+        netScore: (r.likes || []).length - (r.dislikes || []).length,
+        createdAt: r.createdAt
+      };
+    });
 
     return res.json({
       success: true,
