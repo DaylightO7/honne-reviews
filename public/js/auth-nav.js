@@ -17,7 +17,9 @@ function renderAuthNavbar(container, user) {
 
   if (user) {
     const isAdmin = user.role === 'admin' || user.role === 'master_admin';
-    const avatar = user.avatarUrl || '/images/default-avatar.svg';
+    const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+    const avatar = (user.avatarUrl && !user.avatarUrl.includes('default-avatar')) ? user.avatarUrl : defaultAvatar;
+    const fallbackAttr = "this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'32\\' height=\\'32\\' viewBox=\\'0 0 24 24\\' fill=\\'%2394a3b8\\'><path d=\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\'/></svg>';";
 
     container.innerHTML = `
       <div style="display:flex; align-items:center; gap: 0.75rem;">
@@ -27,7 +29,7 @@ function renderAuthNavbar(container, user) {
         <!-- Google-Style Profile Dropdown Trigger -->
         <div class="nav-profile-wrapper">
           <button type="button" class="btn-profile-trigger" id="profile-dropdown-btn" aria-haspopup="true" aria-expanded="false">
-            <img src="${avatar}" alt="Avatar" class="nav-avatar-mini" onerror="this.onerror=null; this.src='/images/default-avatar.svg';">
+            <img src="${avatar}" alt="Avatar" class="nav-avatar-mini" onerror="${fallbackAttr}">
             <span>${escapeHtml(user.name)}</span>
             <span class="dropdown-arrow">▾</span>
           </button>
@@ -35,7 +37,7 @@ function renderAuthNavbar(container, user) {
           <!-- Floating Dropdown Card -->
           <div class="profile-dropdown-card hidden" id="profile-dropdown-menu">
             <div class="dropdown-account-header">
-              <img src="${avatar}" alt="Avatar" class="dropdown-account-avatar" onerror="this.onerror=null; this.src='/images/default-avatar.svg';">
+              <img src="${avatar}" alt="Avatar" class="dropdown-account-avatar" onerror="${fallbackAttr}">
               <div style="overflow: hidden;">
                 <div class="dropdown-account-name">${escapeHtml(user.name)}</div>
                 <div class="dropdown-account-email">${escapeHtml(user.email)}</div>

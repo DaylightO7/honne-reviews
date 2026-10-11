@@ -50,8 +50,39 @@ app.use(
   })
 );
 
-// Serve static assets from public directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static assets from public directory (BEFORE all API routers & 404 handlers)
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
+
+// Explicit HTML Page Routes (direct navigation & extension handling)
+const serveView = (file) => (req, res) => res.sendFile(path.join(__dirname, 'public', file));
+
+app.get('/', serveView('index.html'));
+app.get('/index', serveView('index.html'));
+app.get('/index.html', serveView('index.html'));
+
+app.get('/write-review', serveView('write-review.html'));
+app.get('/write-review.html', serveView('write-review.html'));
+
+app.get('/product', serveView('product.html'));
+app.get('/product.html', serveView('product.html'));
+
+app.get('/profile', serveView('profile.html'));
+app.get('/profile.html', serveView('profile.html'));
+
+app.get('/user', serveView('user.html'));
+app.get('/user.html', serveView('user.html'));
+
+app.get('/login', serveView('login.html'));
+app.get('/login.html', serveView('login.html'));
+
+app.get('/register', serveView('register.html'));
+app.get('/register.html', serveView('register.html'));
+
+app.get('/admin', serveView('admin.html'));
+app.get('/admin.html', serveView('admin.html'));
+
+app.get('/admin-login', serveView('admin-login.html'));
+app.get('/admin-login.html', serveView('admin-login.html'));
 
 // Mount API routes
 app.use('/api/auth', require('./routes/authRoutes'));
