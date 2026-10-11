@@ -15,7 +15,7 @@ connectDB();
 const app = express();
 
 // Enable proxy trust for reverse proxy deployments (Back4App, Render, Docker SSL termination)
-app.set('trust proxy', 1);
+app.set('trust proxy', true);
 
 // Middleware: CORS
 app.use(
@@ -42,7 +42,7 @@ app.use(
       ttl: 14 * 24 * 60 * 60 // 14 days
     }),
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Allows session cookie to be set behind CloudFront/reverse proxy
       sameSite: 'lax',
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
