@@ -117,6 +117,11 @@ app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 
+// Fallback for any other unhandled routes (serve index.html instead of raw 404 text)
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Unhandled Application Error:', err);
