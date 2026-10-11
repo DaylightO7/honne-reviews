@@ -3,17 +3,32 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const Review = require('../models/Review');
 const Product = require('../models/Product');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
 
-// Setup multer storage for review photo uploads
+// Configure Cloudinary credentials from environment
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const isCloudinaryConfigured = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+// Fallback disk storage if Cloudinary credentials are not set (e.g. offline local dev)
 const reviewUploadDir = path.join(__dirname, '..', 'public', 'uploads');
 if (!fs.existsSync(reviewUploadDir)) {
   fs.mkdirSync(reviewUploadDir, { recursive: true });
 }
 
-const reviewStorage = multer.diskStorage({
+const reviewDiskStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, reviewUploadDir);
   },
@@ -24,8 +39,19 @@ const reviewStorage = multer.diskStorage({
   }
 });
 
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'honne_reviews',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 1200, crop: 'limit' }]
+  }
+});
+
+const storage = isCloudinaryConfigured ? cloudinaryStorage : reviewDiskStorage;
+
 const uploadReviewPhotos = multer({
-  storage: reviewStorage,
+  storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB per file
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -37,9 +63,24 @@ const uploadReviewPhotos = multer({
 });
 
 /**
- * Helper: Save up to 8 uploaded images (base64 or static paths) to public/uploads
+ * Helper: Extract the stored file URL or path from a multer uploaded file object
  */
-function processAndSaveImages(imagesArray) {
+function getUploadedFilePath(file) {
+  if (!file) return '';
+  // Multer-storage-cloudinary sets file.path (or secure_url) to full Cloudinary HTTPS URL
+  if (file.path && (file.path.startsWith('http://') || file.path.startsWith('https://'))) {
+    return file.path;
+  }
+  if (file.secure_url) {
+    return file.secure_url;
+  }
+  return `/uploads/${file.filename}`;
+}
+
+/**
+ * Helper: Save up to 8 uploaded images (base64 or static paths) to Cloudinary or public/uploads
+ */
+async function processAndSaveImages(imagesArray) {
   if (!Array.isArray(imagesArray)) return [];
   const uploadDir = path.join(__dirname, '..', 'public', 'uploads');
   if (!fs.existsSync(uploadDir)) {
@@ -55,6 +96,22 @@ function processAndSaveImages(imagesArray) {
 
     // Check for base64 data URI
     if (imgStr.startsWith('data:image/')) {
+      if (isCloudinaryConfigured) {
+        try {
+          const uploadRes = await cloudinary.uploader.upload(imgStr, {
+            folder: 'honne_reviews',
+            transformation: [{ width: 1200, crop: 'limit' }]
+          });
+          if (uploadRes && (uploadRes.secure_url || uploadRes.url)) {
+            savedPaths.push(uploadRes.secure_url || uploadRes.url);
+            continue;
+          }
+        } catch (uploadErr) {
+          console.error('Cloudinary base64 upload error:', uploadErr);
+        }
+      }
+
+      // Fallback: save to local disk
       const match = imgStr.match(/^data:image\/([a-zA-Z0-9+.-]+);base64,(.+)$/);
       if (match) {
         let ext = match[1].toLowerCase();
@@ -83,7 +140,21 @@ function processAndSaveImages(imagesArray) {
  * @route   POST /api/reviews
  * @desc    Submit a review with heading, rating, text, and up to 8 images
  */
-router.post('/', isAuthenticated, async (req, res) => {
+router.post('/', isAuthenticated, (req, res, next) => {
+  if (req.is('multipart/form-data')) {
+    uploadReviewPhotos.array('images', 8)(req, res, (err) => {
+      if (err) {
+        if (err instanceof multer.MulterError || err.message === 'Only image files are allowed.') {
+          return res.status(400).json({ success: false, message: err.message });
+        }
+        return next(err);
+      }
+      next();
+    });
+  } else {
+    next();
+  }
+}, async (req, res) => {
   try {
     const { productId, productName, category, price, heading, comment, rating, images } = req.body;
 
@@ -106,8 +177,10 @@ router.post('/', isAuthenticated, async (req, res) => {
       ? Number(price)
       : 0;
 
-    // Process and store up to 8 images
-    const savedImages = processAndSaveImages(images || []);
+    // Process uploaded files via multer and base64 images from body
+    const uploadedFilePaths = (req.files || []).map(getUploadedFilePath);
+    const savedBodyImages = await processAndSaveImages(images || []);
+    const savedImages = [...uploadedFilePaths, ...savedBodyImages].slice(0, 8);
 
     // Resolve or create product
     let targetProduct = null;
@@ -591,17 +664,17 @@ router.put('/:id', isAuthenticated, (req, res, next) => {
     currentImages = currentImages.filter(img => typeof img === 'string' && img.trim() !== '');
 
     // Collect new uploaded files via multer
-    const newlyUploadedPaths = (req.files || []).map(file => `/uploads/${file.filename}`);
+    const newlyUploadedPaths = (req.files || []).map(getUploadedFilePath);
 
     // Collect any base64 images passed in body.newImages or body.images (if any)
     let additionalBase64 = [];
     if (req.body.newImages) {
       const raw = Array.isArray(req.body.newImages) ? req.body.newImages : [req.body.newImages];
-      additionalBase64 = processAndSaveImages(raw);
+      additionalBase64 = await processAndSaveImages(raw);
     } else if (req.body.images && Array.isArray(req.body.images)) {
       const raw = req.body.images.filter(x => typeof x === 'string' && x.startsWith('data:image/'));
       if (raw.length > 0) {
-        additionalBase64 = processAndSaveImages(raw);
+        additionalBase64 = await processAndSaveImages(raw);
       }
     }
 
