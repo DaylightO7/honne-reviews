@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Write an Unbiased Review — HonneReviews</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .image-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .preview-thumb-box {
+      position: relative;
+      width: 100%;
+      height: 100px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background-color: var(--bg-alt);
+    }
+    .preview-thumb-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .preview-remove-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(15, 23, 42, 0.75);
+      color: #fff;
+      border: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .file-dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      text-align: center;
+      background-color: #fafbfc;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .file-dropzone:hover {
+      border-color: var(--primary);
+      background-color: var(--primary-light);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="/index.html" class="logo-link"><img src="/images/logo.png" alt="Honne Reviews" class="navbar-logo"></a>
+
+      <div class="nav-search">
+        <span class="nav-search-icon">🔍</span>
+        <input type="text" id="navbar-search" placeholder="Search gadgets or brands...">
+      </div>
+
+      <nav class="nav-categories">
+        <a href="index.html?category=Smartphones">Smartphones</a>
+        <a href="index.html?category=Laptops">Laptops</a>
+        <a href="index.html?category=Audio">Audio</a>
+        <a href="index.html?category=Accessories">Accessories</a>
+        <a href="index.html?category=Wearables">Wearables</a>
+      </nav>
+
+      <div class="nav-auth" id="nav-auth-container">
+        <!-- Injected via auth check -->
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <span>&rsaquo;</span>
+      <span style="color: var(--text-primary); font-weight: 600;">Write Review</span>
+    </div>
+
+    <div class="form-card" style="max-width: 720px; margin: 1rem auto;">
+      <div class="form-header" style="text-align: left; margin-bottom: 1.5rem;">
+        <span class="badge badge-primary" style="margin-bottom: 0.5rem;">Verified Community Voice</span>
+        <h1 style="font-size: 1.85rem; margin-bottom: 0.35rem;">Write an Unbiased Review</h1>
+        <p style="color: var(--text-secondary);">
+          Help buyers make informed gadget decisions. Upload up to 8 real-world photos.
+        </p>
+      </div>
+
+      <div id="alert-box" class="alert hidden"></div>
+
+      <form id="write-review-form">
+        <!-- Product Name -->
+        <div class="form-group">
+          <label for="product-name">Product Name &amp; Model *</label>
+          <input type="text" id="product-name" required placeholder="e.g. Sony WH-1000XM5 or MacBook Pro 16">
+        </div>
+
+        <!-- Product Category -->
+        <div class="form-group">
+          <label for="product-category">Product Category *</label>
+          <select id="product-category" required>
+            <option value="Smartphones">Smartphones</option>
+            <option value="Laptops">Laptops</option>
+            <option value="Audio">Audio</option>
+            <option value="Accessories">Accessories</option>
+            <option value="Wearables">Wearables</option>
+          </select>
+        </div>
+
+        <!-- Product Price -->
+        <div class="form-group">
+          <label for="price">Product Price (₹) *</label>
+          <input type="number" id="price" name="price" placeholder="e.g. 54999" required min="0">
+        </div>
+
+        <!-- Review Heading -->
+        <div class="form-group">
+          <label for="review-heading">Review Heading *</label>
+          <input type="text" id="review-heading" required placeholder="e.g. Phenomenal ANC, but earcups get warm after 3 hours">
+        </div>
+
+        <!-- Star Rating -->
+        <div class="form-group">
+          <label for="review-rating">Overall Rating *</label>
+          <select id="review-rating" required style="max-width: 280px;">
+            <option value="5">★★★★★ (5 Stars - Exceptional)</option>
+            <option value="4">★★★★☆ (4 Stars - Recommended)</option>
+            <option value="3">★★★☆☆ (3 Stars - Average / Mixed)</option>
+            <option value="2">★★☆☆☆ (2 Stars - Disappointing)</option>
+            <option value="1">★☆☆☆☆ (1 Star - Terrible / Avoid)</option>
+          </select>
+        </div>
+
+        <!-- Review Content -->
+        <div class="form-group">
+          <label for="review-content">Detailed Review Experience *</label>
+          <textarea id="review-content" rows="6" required placeholder="How is real-world performance, build quality, software bugs, and battery life?"></textarea>
+        </div>
+
+        <!-- Image Upload (Up to 8 Images) -->
+        <div class="form-group">
+          <label>Hands-on Photos (Up to 8 Images)</label>
+          <div class="file-dropzone" id="dropzone">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📸</div>
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
+              Click to select or drop up to 8 photos
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">
+              Supports PNG, JPG, JPEG, WEBP. First uploaded photo is used as the product card thumbnail.
+            </div>
+            <input type="file" id="file-input" multiple accept="image/*" style="display: none;">
+          </div>
+
+          <div class="image-preview-grid" id="image-preview-grid"></div>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-block" style="margin-top: 2rem; padding: 0.85rem; font-size: 1rem;">
+          Publish Community Review
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-bottom">
+      <div>&copy; 2026 HonneReviews Media. Unbiased Consumer Tech Intelligence.</div>
+      <a href="admin-login.html" class="admin-portal-link">🔒 Admin Portal</a>
+    </div>
+  </footer>
+
+  <script src="js/auth-nav.js"></script>
+  <script src="js/write-review.js"></script>
+</body>
+</html>

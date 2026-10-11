@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — HonneReviews</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="/index.html" class="logo-link"><img src="/images/logo.png" alt="Honne Reviews" class="navbar-logo"></a>
+      <div class="nav-auth">
+        <span style="font-size: 0.875rem; color: var(--text-muted);">Already registered?</span>
+        <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="form-card">
+      <div class="form-header">
+        <h1>Join the Community</h1>
+        <p>Post honest gadget reviews, rate specs, and help buyers avoid bad tech purchases.</p>
+      </div>
+
+      <div id="alert-box" class="alert hidden"></div>
+
+      <form id="register-form">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" required placeholder="username" autofocus>
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" required placeholder="username@example.com">
+        </div>
+        <div class="form-group">
+          <label for="password">Password (Minimum 6 characters)</label>
+          <input type="password" id="password" required minlength="6" placeholder="Choose a secure password">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem; padding: 0.75rem;">
+          Create Account
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+        By signing up, you agree to HonneReviews Community Guidelines. Zero sponsored promotions allowed.
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-bottom">
+      <div>&copy; 2026 HonneReviews Media.</div>
+      <a href="admin-login.html" class="admin-portal-link">🔒 Admin Portal</a>
+    </div>
+  </footer>
+
+  <script src="js/auth.js"></script>
+</body>
+</html>

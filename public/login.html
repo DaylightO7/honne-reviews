@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — HonneReviews</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="/index.html" class="logo-link"><img src="/images/logo.png" alt="Honne Reviews" class="navbar-logo"></a>
+      <div class="nav-auth">
+        <span style="font-size: 0.875rem; color: var(--text-muted);">New to HonneReviews?</span>
+        <a href="register.html" class="btn btn-outline btn-sm">Create Account</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="form-card">
+      <div class="form-header">
+        <h1>Welcome Back</h1>
+        <p>Sign in to post verified reviews and like helpful community insights.</p>
+      </div>
+
+      <div id="alert-box" class="alert hidden"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" required placeholder="username@example.com" autofocus>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required placeholder="Enter your password">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem; padding: 0.75rem;">
+          Sign In
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+        Don't have an account? <a href="register.html" style="color: var(--primary); font-weight: 600;">Sign up for free</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-bottom">
+      <div>&copy; 2026 HonneReviews Media.</div>
+      <a href="admin-login.html" class="admin-portal-link">🔒 Admin Portal</a>
+    </div>
+  </footer>
+
+  <script src="js/auth.js"></script>
+</body>
+</html>

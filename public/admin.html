@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Moderation Desk — HonneReviews</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="background-color: #f8fafc;">
+
+  <!-- Admin Top Navbar -->
+  <header class="navbar" style="border-bottom: 2px solid #0f172a;">
+    <div class="container nav-inner">
+      <div style="display:flex; align-items:center; gap: 1rem;">
+        <a href="/index.html" class="logo-link"><img src="/images/logo.png" alt="Honne Reviews" class="navbar-logo"></a>
+        <span class="badge badge-danger" id="admin-badge-label">Admin Desk</span>
+        <a href="index.html" class="btn btn-outline btn-sm" target="_blank">
+          View Public Storefront ↗
+        </a>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span id="admin-user-display" class="badge badge-dark" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+          Admin: Authenticating...
+        </span>
+        <button id="admin-logout-btn" class="btn btn-outline btn-sm">
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <!-- Headline -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Review Moderation Desk</h1>
+        <p style="color: #64748b;">Multi-Admin Consensus Protocol: Flagged by &ge; 3 distinct Admins &rarr; Auto-removed from public feed.</p>
+      </div>
+      <div>
+        <button id="refresh-moderation-btn" class="btn btn-outline btn-sm">
+          ↻ Refresh Review Feed
+        </button>
+      </div>
+    </div>
+
+    <!-- Notification Alert -->
+    <div id="admin-alert" class="alert hidden"></div>
+
+    <!-- Master Admin Section: Add Sub-Admin Form (Visible ONLY to role: master_admin) -->
+    <section id="master-admin-section" class="card hidden" style="border-left: 4px solid var(--primary); margin-bottom: 2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+        <div>
+          <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary);">
+            👑 Master Admin: Create Sub-Admin
+          </h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Only master_admin can provision new moderator credentials.
+          </p>
+        </div>
+      </div>
+
+      <form id="create-subadmin-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto; gap: 1rem; align-items: flex-end;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="subadmin-name">Full Name</label>
+          <input type="text" id="subadmin-name" required placeholder="Moderator Name">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="subadmin-email">Email Address</label>
+          <input type="email" id="subadmin-email" required placeholder="admin@honnereviews.com">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="subadmin-password">Password</label>
+          <input type="password" id="subadmin-password" required minlength="6" placeholder="Min. 6 chars">
+        </div>
+        <button type="submit" class="btn btn-primary" style="height: 42px;">
+          + Add Admin
+        </button>
+      </form>
+    </section>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-title">Total Products</div>
+        <div class="stat-card-val" id="stat-products">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-title">Total Reviews</div>
+        <div class="stat-card-val" id="stat-reviews">0</div>
+      </div>
+      <div class="stat-card" style="border-left: 4px solid var(--warning);">
+        <div class="stat-card-title">Flagged Under Review</div>
+        <div class="stat-card-val" id="stat-flagged" style="color: #d97706;">0</div>
+      </div>
+      <div class="stat-card" style="border-left: 4px solid var(--danger);">
+        <div class="stat-card-title">Auto-Removed (&ge; 3 Flags)</div>
+        <div class="stat-card-val" id="stat-removed" style="color: #dc2626;">0</div>
+      </div>
+    </div>
+
+    <!-- Multi-Admin Flagging Rule Callout -->
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: flex-start; gap: 1rem;">
+      <span style="font-size: 1.5rem;">⚖️</span>
+      <div style="font-size: 0.9rem; color: #1e40af; line-height: 1.5;">
+        <strong>Multi-Admin Flagging Mechanism:</strong>
+        When any review accumulates <strong>3 flags from distinct administrators</strong>, it is automatically marked <code>isRemoved: true</code> and hidden from all public pages. Flag counts remain strictly hidden from regular buyers.
+      </div>
+    </div>
+
+    <!-- Moderation Table Tabs -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+      <button class="tab-btn active" id="filter-all-btn">All Submitted Reviews</button>
+      <button class="tab-btn" id="filter-flagged-btn">Reports Queue (Flagged / Removed)</button>
+    </div>
+
+    <!-- Moderation Table -->
+    <div class="admin-table-wrapper">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Review &amp; Rating</th>
+            <th>Author</th>
+            <th>Likes / Dislikes</th>
+            <th>Flag Status</th>
+            <th>Visibility</th>
+            <th>Moderator Actions</th>
+          </tr>
+        </thead>
+        <tbody id="moderation-table-body">
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+              Loading reviews feed...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

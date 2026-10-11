@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HonneReviews — Real Reviews from Real Buyers. No Sponsored Clutter.</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="/index.html" class="logo-link"><img src="/images/logo.png" alt="Honne Reviews" class="navbar-logo"></a>
+
+      <!-- Search Bar -->
+      <div class="nav-search">
+        <span class="nav-search-icon">🔍</span>
+        <input type="text" id="navbar-search" placeholder="Search by gadget model or brand (e.g. Sony, iPhone)...">
+      </div>
+
+      <!-- Category Links in Navbar -->
+      <nav class="nav-categories">
+        <a href="#" class="nav-cat-link" data-category="Smartphones">Smartphones</a>
+        <a href="#" class="nav-cat-link" data-category="Laptops">Laptops</a>
+        <a href="#" class="nav-cat-link" data-category="Audio">Audio</a>
+        <a href="#" class="nav-cat-link" data-category="Accessories">Accessories</a>
+        <a href="#" class="nav-cat-link" data-category="Wearables">Wearables</a>
+      </nav>
+
+      <!-- Auth Controls -->
+      <div class="nav-auth" id="nav-auth-container">
+        <!-- Rendered dynamically via app.js -->
+        <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+        <a href="register.html" class="btn btn-primary btn-sm">Sign Up</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container hero-content">
+      <div class="hero-pill">
+        <span>🛡️ 100% Verified Community Opinions</span>
+      </div>
+      <h1>Real Reviews from Real Buyers.<br>No Sponsored Clutter.</h1>
+      <p>Unfiltered community benchmarks, honest long-term impressions, and zero paid influencer bias.</p>
+
+      <!-- Quick Search Box -->
+      <div class="hero-search-box">
+        <input type="text" id="hero-search-input" placeholder="What gadget are you researching today?">
+        <button id="hero-search-btn" class="btn btn-primary">Find Reviews</button>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat-item"><strong id="hero-review-count">...</strong> Unbiased Reviews</div>
+        <div class="hero-stat-item"><strong>0</strong> Sponsored Promotions</div>
+        <div class="hero-stat-item"><strong>Multi-Admin</strong> Moderation Protocol</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Catalog Content -->
+  <main class="container">
+    <!-- Category Filter Tabs -->
+    <div class="filter-tabs-wrapper">
+      <div class="filter-tabs" id="category-tabs">
+        <button class="tab-btn active" data-category="All">All Gadgets</button>
+        <button class="tab-btn" data-category="Smartphones">Smartphones</button>
+        <button class="tab-btn" data-category="Laptops">Laptops</button>
+        <button class="tab-btn" data-category="Audio">Audio</button>
+        <button class="tab-btn" data-category="Accessories">Accessories</button>
+        <button class="tab-btn" data-category="Wearables">Wearables</button>
+      </div>
+      <div class="results-meta" id="results-count">Showing all products</div>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="product-grid" id="product-grid">
+      <!-- Injected dynamically via JS -->
+      <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #94a3b8;">
+        Loading catalog...
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          Honne<span style="color: var(--primary);">Reviews</span>
+        </div>
+        <div class="footer-links">
+          <a href="index.html">Browse All</a>
+          <a href="login.html">Buyer Account</a>
+          <a href="register.html">Join Community</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>&copy; 2026 HonneReviews Media. Unbiased Consumer Tech Intelligence.</div>
+        <a href="admin-login.html" class="admin-portal-link">
+          🔒 Admin Portal
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/auth-nav.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

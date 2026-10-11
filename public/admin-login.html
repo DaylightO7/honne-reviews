@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal Authentication — HonneReviews</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="background-color: #0b1120;">
+
+  <!-- Minimal Dark Topbar -->
+  <header style="background: #0f172a; border-bottom: 1px solid #1e293b; padding: 0.4rem 0; min-height: 64px; display: flex; align-items: center;">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <a href="/index.html" class="logo-link"><img src="/images/logo.png" alt="Honne Reviews" class="navbar-logo"></a>
+        <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 500;">Staff Portal</span>
+      </div>
+      <a href="index.html" class="btn btn-outline btn-sm" style="color: #cbd5e1; border-color: #334155;">
+        &larr; Back to Public Portal
+      </a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="form-card" style="background: #1e293b; border-color: #334155; color: #ffffff;">
+      <div class="form-header">
+        <div style="display: inline-block; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; margin-bottom: 1rem;">
+          🔒 RESTRICTED MODERATOR ACCESS
+        </div>
+        <h1 style="color: #ffffff; font-size: 1.6rem;">Admin Authentication</h1>
+        <p style="color: #94a3b8;">Enter administrator credentials to access the multi-admin review moderation desk.</p>
+      </div>
+
+      <div id="alert-box" class="alert hidden"></div>
+
+      <form id="admin-login-form">
+        <div class="form-group">
+          <label for="admin-email" style="color: #cbd5e1;">Admin Email</label>
+          <input type="email" id="admin-email" required placeholder="admin@honnereviews.com" style="background: #0f172a; border-color: #334155; color: #ffffff;" autofocus>
+        </div>
+        <div class="form-group">
+          <label for="admin-password" style="color: #cbd5e1;">Password</label>
+          <input type="password" id="admin-password" required placeholder="••••••••••••" style="background: #0f172a; border-color: #334155; color: #ffffff;">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem; padding: 0.75rem; background-color: #ef4444;">
+          Authenticate as Admin
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+</body>
+</html>

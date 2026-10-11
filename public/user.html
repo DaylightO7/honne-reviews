@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Author Profile — HonneReviews</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .author-hero {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem;
+      box-shadow: var(--shadow-sm);
+      margin-top: 1.5rem;
+    }
+    .author-header {
+      display: flex;
+      gap: 1.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .author-avatar-lg {
+      width: 104px;
+      height: 104px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--primary);
+      box-shadow: var(--shadow-md);
+      background: var(--bg-alt);
+    }
+    .author-bio-box {
+      margin-top: 1.5rem;
+      padding: 1.25rem 1.5rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      line-height: 1.65;
+      font-size: 0.95rem;
+    }
+    .author-reputation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .rep-stat-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .rep-stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .rep-stat-subtext {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+    .author-product-card {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .author-product-thumb {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="/index.html" class="logo-link"><img src="/images/logo.png" alt="Honne Reviews" class="navbar-logo"></a>
+
+      <div class="nav-search">
+        <span class="nav-search-icon">🔍</span>
+        <input type="text" id="navbar-search" placeholder="Search gadgets or brands...">
+      </div>
+
+      <nav class="nav-categories">
+        <a href="index.html?category=Smartphones">Smartphones</a>
+        <a href="index.html?category=Laptops">Laptops</a>
+        <a href="index.html?category=Audio">Audio</a>
+        <a href="index.html?category=Accessories">Accessories</a>
+        <a href="index.html?category=Wearables">Wearables</a>
+      </nav>
+
+      <div class="nav-auth" id="nav-auth-container">
+        <!-- Injected via auth-nav.js -->
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <span>&rsaquo;</span>
+      <span>Community Reviewer</span>
+      <span>&rsaquo;</span>
+      <span id="bc-author-name" style="color: var(--text-primary); font-weight: 600;">Loading Author...</span>
+    </div>
+
+    <!-- Alert Box -->
+    <div id="author-page-alert" class="alert hidden" style="margin-top: 1rem;"></div>
+
+    <!-- Author Profile Hero -->
+    <div class="author-hero" id="author-hero">
+      <div class="author-header">
+        <img src="/images/default-avatar.svg" alt="Author Avatar" id="author-avatar" class="author-avatar-lg" onerror="this.onerror=null; this.src='/images/default-avatar.svg';">
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <h1 id="author-name" style="font-size: 1.85rem; margin: 0;">Loading Author...</h1>
+            <span class="badge badge-primary" id="author-role-badge">Verified Buyer</span>
+            <div id="author-owner-badge" class="hidden">
+              <a href="profile.html" class="btn btn-outline btn-sm" style="font-weight: 600;">
+                ⚙️ Manage Your Profile
+              </a>
+            </div>
+          </div>
+          <div id="author-meta-sub" style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.35rem;">
+            Community Member
+          </div>
+        </div>
+      </div>
+
+      <!-- Bio Box -->
+      <div class="author-bio-box" id="author-bio-box">
+        <strong>About the Author:</strong>
+        <p id="author-bio-text" style="margin-top: 0.35rem;">Loading description...</p>
+      </div>
+    </div>
+
+    <!-- Reputation Counters -->
+    <div class="author-reputation-grid">
+      <div class="rep-stat-card">
+        <div class="rep-stat-value" id="author-likes" style="color: #10b981;">0</div>
+        <div class="rep-stat-subtext">👍 Likes Received</div>
+      </div>
+      <div class="rep-stat-card">
+        <div class="rep-stat-value" id="author-dislikes" style="color: #ef4444;">0</div>
+        <div class="rep-stat-subtext">👎 Dislikes Received</div>
+      </div>
+      <div class="rep-stat-card">
+        <div class="rep-stat-value" id="author-reviews-count">0</div>
+        <div class="rep-stat-subtext">📝 Published Reviews</div>
+      </div>
+    </div>
+
+    <!-- Author Reviews Section -->
+    <section>
+      <div style="margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.4rem; margin-bottom: 0.25rem;" id="author-feed-title">
+          Published Reviews
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.875rem;">
+          Real hands-on impressions and long-term tech experiences authored by this community buyer.
+        </p>
+      </div>
+
+      <div id="author-reviews-feed">
+        <div style="text-align: center; padding: 3rem; color: #94a3b8;">
+          Loading community reviews...
+        </div>
+      </div>
+    </section>
+
+    <!-- Inline Edit Review Modal (Only enabled if viewer is owner) -->
+    <div id="edit-review-modal" class="modal-backdrop hidden" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;">
+      <div class="modal-card" style="background: #ffffff; border-radius: var(--radius-md); max-width: 580px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 1.75rem; box-shadow: var(--shadow-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700;">✏️ Edit Your Review</h3>
+          <button type="button" id="close-edit-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+        </div>
+
+        <div id="edit-modal-alert" class="alert hidden" style="margin-bottom: 1rem;"></div>
+
+        <form id="edit-review-form">
+          <input type="hidden" id="edit-review-id">
+
+          <div class="form-group">
+            <label for="edit-rating-select">Rating (1 to 5 Stars) *</label>
+            <select id="edit-rating-select" required>
+              <option value="5">★★★★★ (5 Stars - Exceptional)</option>
+              <option value="4">★★★★☆ (4 Stars - Recommended)</option>
+              <option value="3">★★★☆☆ (3 Stars - Average / Mixed)</option>
+              <option value="2">★★☆☆☆ (2 Stars - Disappointing)</option>
+              <option value="1">★☆☆☆☆ (1 Star - Avoid)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-heading-input">Review Headline *</label>
+            <input type="text" id="edit-heading-input" required placeholder="Headline summarising your experience">
+          </div>
+
+          <div class="form-group">
+            <label for="edit-comment-textarea">Detailed Review Content *</label>
+            <textarea id="edit-comment-textarea" rows="5" required placeholder="Detailed impressions and long-term feedback..."></textarea>
+          </div>
+
+          <!-- Review Photos Management (Up to 8 Images) -->
+          <div class="form-group" style="margin-top: 1rem;">
+            <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-weight: 600;">Attached Photos (Up to 8)</span>
+              <span id="edit-images-counter" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">0 / 8</span>
+            </label>
+            <div id="edit-images-preview-grid" class="image-preview-grid" style="margin-bottom: 0.75rem;"></div>
+            <div>
+              <label for="edit-images-input" class="btn btn-outline btn-sm" id="edit-add-photos-btn" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
+                📷 Add Photos
+              </label>
+              <input type="file" id="edit-images-input" accept="image/*" multiple style="display: none;">
+              <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.35rem;">
+                PNG, JPG, or WebP. Click ✖ on any photo to remove it.
+              </small>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" id="cancel-edit-btn" class="btn btn-outline">Cancel</button>
+            <button type="submit" id="save-edit-btn" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-bottom">
+      <div>&copy; 2026 HonneReviews Media. Unbiased Consumer Tech Intelligence.</div>
+      <a href="admin-login.html" class="admin-portal-link">🔒 Admin Portal</a>
+    </div>
+  </footer>
+
+  <script src="js/auth-nav.js"></script>
+  <script src="js/user.js"></script>
+</body>
+</html>
