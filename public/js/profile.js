@@ -120,8 +120,10 @@ avatarFileInput?.addEventListener('change', async (e) => {
 
     const data = await res.json();
     if (res.ok && data.success) {
-      profileAvatar.src = data.avatarUrl;
-      currentUser.avatarUrl = data.avatarUrl;
+      const newAvatarUrl = data.avatarUrl || data.avatar;
+      profileAvatar.src = newAvatarUrl;
+      currentUser.avatarUrl = newAvatarUrl;
+      currentUser.avatar = newAvatarUrl;
       if (typeof renderAuthNavbar === 'function') {
         renderAuthNavbar(navAuthContainer, currentUser);
       }

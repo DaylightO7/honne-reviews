@@ -3,17 +3,32 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const User = require('../models/User');
 const Review = require('../models/Review');
 const { isAuthenticated } = require('../middleware/auth');
 
-// Setup multer storage for avatar uploads
+// Configure Cloudinary credentials from environment
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const isCloudinaryConfigured = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+// Fallback disk storage for avatars if Cloudinary credentials are not set (e.g. offline local dev)
 const avatarUploadDir = path.join(__dirname, '..', 'public', 'uploads', 'avatars');
 if (!fs.existsSync(avatarUploadDir)) {
   fs.mkdirSync(avatarUploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
+const avatarDiskStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, avatarUploadDir);
   },
@@ -24,8 +39,19 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({
-  storage,
+const avatarCloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'honne_avatars',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 250, height: 250, crop: 'fill', gravity: 'face' }]
+  }
+});
+
+const avatarStorage = isCloudinaryConfigured ? avatarCloudinaryStorage : avatarDiskStorage;
+
+const uploadAvatar = multer({
+  storage: avatarStorage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -35,6 +61,21 @@ const upload = multer({
     }
   }
 });
+
+/**
+ * Helper: Extract the stored file URL or path from a multer uploaded avatar file object
+ */
+function getUploadedAvatarPath(file) {
+  if (!file) return '';
+  // Multer-storage-cloudinary sets file.path (or secure_url) to full Cloudinary HTTPS URL
+  if (file.path && (file.path.startsWith('http://') || file.path.startsWith('https://'))) {
+    return file.path;
+  }
+  if (file.secure_url) {
+    return file.secure_url;
+  }
+  return `/uploads/avatars/${file.filename}`;
+}
 
 /**
  * @route   GET /api/users/profile
@@ -61,7 +102,8 @@ router.get('/profile', isAuthenticated, async (req, res) => {
         email: user.email,
         role: user.role,
         bio: user.bio || '',
-        avatarUrl: user.avatarUrl || '/images/default-avatar.png',
+        avatarUrl: user.avatarUrl || user.avatar || '/images/default-avatar.png',
+        avatar: user.avatarUrl || user.avatar || '/images/default-avatar.png',
         createdAt: user.createdAt
       },
       stats: {
@@ -78,9 +120,12 @@ router.get('/profile', isAuthenticated, async (req, res) => {
 
 /**
  * @route   PUT /api/users/profile
- * @desc    Update bio/description (username/name is strictly read-only and blocked)
+ * @route   PATCH /api/users/profile
+ * @route   PUT /api/users/me
+ * @route   PATCH /api/users/me
+ * @desc    Update bio/description and optional avatar
  */
-router.put('/profile', isAuthenticated, async (req, res) => {
+const updateProfileHandler = async (req, res) => {
   try {
     const userId = req.session.user?.id || req.session.userId;
     const user = await User.findById(userId);
@@ -88,10 +133,33 @@ router.put('/profile', isAuthenticated, async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
 
-    const { bio } = req.body;
+    const { bio, avatar, avatarUrl } = req.body;
     // Strictly update bio only. Name/username changes are completely ignored and blocked.
     if (bio !== undefined) {
       user.bio = String(bio).trim();
+    }
+
+    const avatarInput = avatar || avatarUrl;
+    if (avatarInput && typeof avatarInput === 'string') {
+      if (avatarInput.startsWith('data:image/')) {
+        if (isCloudinaryConfigured) {
+          try {
+            const uploadResult = await cloudinary.uploader.upload(avatarInput, {
+              folder: 'honne_avatars',
+              transformation: [{ width: 250, height: 250, crop: 'fill', gravity: 'face' }]
+            });
+            if (uploadResult && (uploadResult.secure_url || uploadResult.url)) {
+              user.avatarUrl = uploadResult.secure_url || uploadResult.url;
+              user.avatar = user.avatarUrl;
+            }
+          } catch (cloudErr) {
+            console.error('Cloudinary avatar upload in profile update error:', cloudErr);
+          }
+        }
+      } else if (avatarInput.startsWith('http://') || avatarInput.startsWith('https://')) {
+        user.avatarUrl = avatarInput;
+        user.avatar = avatarInput;
+      }
     }
 
     await user.save();
@@ -99,7 +167,19 @@ router.put('/profile', isAuthenticated, async (req, res) => {
     // Sync session
     if (req.session.user) {
       req.session.user.bio = user.bio;
+      if (user.avatarUrl) {
+        req.session.user.avatarUrl = user.avatarUrl;
+        req.session.user.avatar = user.avatarUrl;
+      }
     }
+
+    await new Promise((resolve) => {
+      if (req.session.save) {
+        req.session.save(resolve);
+      } else {
+        resolve();
+      }
+    });
 
     return res.json({
       success: true,
@@ -110,21 +190,27 @@ router.put('/profile', isAuthenticated, async (req, res) => {
         email: user.email,
         role: user.role,
         bio: user.bio,
-        avatarUrl: user.avatarUrl || '/images/default-avatar.png'
+        avatarUrl: user.avatarUrl || user.avatar || '/images/default-avatar.png',
+        avatar: user.avatarUrl || user.avatar || '/images/default-avatar.png'
       }
     });
   } catch (error) {
     console.error('Update profile error:', error);
     return res.status(500).json({ success: false, message: error.message || 'Server error updating profile.' });
   }
-});
+};
+
+router.put('/profile', isAuthenticated, updateProfileHandler);
+router.patch('/profile', isAuthenticated, updateProfileHandler);
+router.put('/me', isAuthenticated, updateProfileHandler);
+router.patch('/me', isAuthenticated, updateProfileHandler);
 
 /**
  * @route   POST /api/users/avatar
  * @desc    Upload avatar picture (supports multer file upload and base64 JSON payload)
  */
 router.post('/avatar', isAuthenticated, (req, res, next) => {
-  upload.single('avatar')(req, res, (err) => {
+  uploadAvatar.single('avatar')(req, res, (err) => {
     if (err) {
       return res.status(400).json({ success: false, message: err.message || 'File upload error.' });
     }
@@ -142,22 +228,39 @@ router.post('/avatar', isAuthenticated, (req, res, next) => {
 
     // 1. Check if multer processed a file
     if (req.file) {
-      avatarPath = `/uploads/avatars/${req.file.filename}`;
-    } else if (req.body && req.body.avatar && typeof req.body.avatar === 'string') {
+      avatarPath = getUploadedAvatarPath(req.file);
+    } else if (req.body && (req.body.avatar || req.body.avatarUrl) && typeof (req.body.avatar || req.body.avatarUrl) === 'string') {
       // 2. Check base64 data URI
-      const base64Str = req.body.avatar;
+      const base64Str = req.body.avatar || req.body.avatarUrl;
       if (base64Str.startsWith('data:image/')) {
-        const match = base64Str.match(/^data:image\/([a-zA-Z0-9+.-]+);base64,(.+)$/);
-        if (match) {
-          let ext = match[1].toLowerCase();
-          if (ext === 'jpeg') ext = 'jpg';
-          if (ext.includes('+')) ext = ext.split('+')[0];
-          const filename = `avatar-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
-          const filePath = path.join(avatarUploadDir, filename);
-          fs.writeFileSync(filePath, Buffer.from(match[2], 'base64'));
-          avatarPath = `/uploads/avatars/${filename}`;
+        if (isCloudinaryConfigured) {
+          try {
+            const uploadResult = await cloudinary.uploader.upload(base64Str, {
+              folder: 'honne_avatars',
+              transformation: [{ width: 250, height: 250, crop: 'fill', gravity: 'face' }]
+            });
+            if (uploadResult && (uploadResult.secure_url || uploadResult.url)) {
+              avatarPath = uploadResult.secure_url || uploadResult.url;
+            }
+          } catch (cloudErr) {
+            console.error('Cloudinary avatar base64 upload error:', cloudErr);
+          }
         }
-      } else if (base64Str.startsWith('/')) {
+
+        // Fallback: local disk write if Cloudinary is not configured or failed
+        if (!avatarPath) {
+          const match = base64Str.match(/^data:image\/([a-zA-Z0-9+.-]+);base64,(.+)$/);
+          if (match) {
+            let ext = match[1].toLowerCase();
+            if (ext === 'jpeg') ext = 'jpg';
+            if (ext.includes('+')) ext = ext.split('+')[0];
+            const filename = `avatar-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+            const filePath = path.join(avatarUploadDir, filename);
+            fs.writeFileSync(filePath, Buffer.from(match[2], 'base64'));
+            avatarPath = `/uploads/avatars/${filename}`;
+          }
+        }
+      } else if (base64Str.startsWith('http://') || base64Str.startsWith('https://') || base64Str.startsWith('/')) {
         avatarPath = base64Str;
       }
     }
@@ -167,16 +270,27 @@ router.post('/avatar', isAuthenticated, (req, res, next) => {
     }
 
     user.avatarUrl = avatarPath;
+    user.avatar = avatarPath;
     await user.save();
 
     if (req.session.user) {
       req.session.user.avatarUrl = avatarPath;
+      req.session.user.avatar = avatarPath;
     }
+
+    await new Promise((resolve) => {
+      if (req.session.save) {
+        req.session.save(resolve);
+      } else {
+        resolve();
+      }
+    });
 
     return res.json({
       success: true,
       message: 'Avatar updated successfully.',
-      avatarUrl: avatarPath
+      avatarUrl: avatarPath,
+      avatar: avatarPath
     });
   } catch (error) {
     console.error('Avatar upload error:', error);

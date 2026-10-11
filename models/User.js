@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema(
     avatarUrl: {
       type: String,
       default: '/images/default-avatar.png'
+    },
+    avatar: {
+      type: String,
+      default: ''
     }
   },
   {

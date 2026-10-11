@@ -43,7 +43,8 @@ router.post('/register', async (req, res, next) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      avatarUrl: user.avatarUrl || '/images/default-avatar.svg',
+      avatarUrl: user.avatarUrl || user.avatar || '/images/default-avatar.svg',
+      avatar: user.avatarUrl || user.avatar || '/images/default-avatar.svg',
       bio: user.bio || ''
     };
 
@@ -103,7 +104,8 @@ router.post('/login', async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      avatarUrl: user.avatarUrl || '/images/default-avatar.svg',
+      avatarUrl: user.avatarUrl || user.avatar || '/images/default-avatar.svg',
+      avatar: user.avatarUrl || user.avatar || '/images/default-avatar.svg',
       bio: user.bio || ''
     };
 
@@ -168,7 +170,8 @@ router.post('/admin-login', async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      avatarUrl: user.avatarUrl || '/images/default-avatar.svg',
+      avatarUrl: user.avatarUrl || user.avatar || '/images/default-avatar.svg',
+      avatar: user.avatarUrl || user.avatar || '/images/default-avatar.svg',
       bio: user.bio || ''
     };
 
@@ -246,7 +249,8 @@ router.get('/me', async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      avatarUrl: user.avatarUrl || '/images/default-avatar.svg',
+      avatarUrl: user.avatarUrl || user.avatar || '/images/default-avatar.svg',
+      avatar: user.avatarUrl || user.avatar || '/images/default-avatar.svg',
       bio: user.bio || ''
     };
 
