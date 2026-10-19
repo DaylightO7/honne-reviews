@@ -238,7 +238,94 @@ const seedData = async () => {
       isRemoved: false
     });
 
-    console.log('[Seed] Seeded initial reviews (including a 2-flag review ready for 3rd admin auto-remove test)');
+    // Review 5: Positive on Pixel 9 Pro XL
+    await Review.create({
+      product: products[2]._id,
+      user: users[0]._id,
+      heading: 'Pure Android Experience with Incredible AI Editing',
+      rating: 5,
+      comment: 'Gemini Nano works seamlessly on-device and Magic Editor makes photo cleanup instant. The display is bright and crisp.',
+      images: ['https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=800&q=80'],
+      likes: [users[1]._id],
+      dislikes: []
+    });
+
+    // Review 6: Positive on MacBook Pro 16"
+    await Review.create({
+      product: products[3]._id,
+      user: users[1]._id,
+      heading: 'Unrivaled Performance and Battery Life for Developers',
+      rating: 5,
+      comment: 'Compiling large projects is instantaneous with M4 Max. The Liquid Retina XDR screen is stunning, and the battery lasts through full workdays.',
+      images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80'],
+      likes: [users[2]._id],
+      dislikes: []
+    });
+
+    // Review 7: Balanced on Dell XPS 14
+    await Review.create({
+      product: products[4]._id,
+      user: users[2]._id,
+      heading: 'Sleek Minimalist Ultrabook with Gorgeous OLED',
+      rating: 4,
+      comment: 'The 3.2K OLED panel is breathtaking and build quality feels top-tier. Capacitive touch keys take some adjustment.',
+      images: ['https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=800&q=80'],
+      likes: [users[0]._id],
+      dislikes: []
+    });
+
+    // Review 8: Positive on QuietComfort Ultra
+    await Review.create({
+      product: products[6]._id,
+      user: users[0]._id,
+      heading: 'Supremely Comfortable with Immersive Audio',
+      rating: 5,
+      comment: 'The spatial audio modes really widen the soundstage and the ear cups remain plush for hours of continuous wear.',
+      images: ['https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=800&q=80'],
+      likes: [users[1]._id],
+      dislikes: []
+    });
+
+    // Review 9: Positive on Apple Watch Ultra 2
+    await Review.create({
+      product: products[7]._id,
+      user: users[1]._id,
+      heading: 'The Ultimate Adventure Smartwatch',
+      rating: 5,
+      comment: 'Battery easily hits 3 days on trail hikes. The 3000 nits display is crystal clear even in blinding direct sun.',
+      images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80'],
+      likes: [users[2]._id],
+      dislikes: []
+    });
+
+    // Review 10: Positive on MX Master 3S
+    await Review.create({
+      product: products[8]._id,
+      user: users[2]._id,
+      heading: 'The Ergonomic Productivity King',
+      rating: 5,
+      comment: 'MagSpeed wheel and ultra-quiet switches make this the quintessential mouse for editing and multitasking.',
+      images: ['https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=800&q=80'],
+      likes: [users[0]._id],
+      dislikes: []
+    });
+
+    // Recalculate and synchronize review stats on all seeded products
+    for (const prod of products) {
+      const pReviews = await Review.find({ product: prod._id, isRemoved: { $ne: true } });
+      const pCount = pReviews.length;
+      const pAvg = pCount > 0
+        ? Number((pReviews.reduce((sum, r) => sum + r.rating, 0) / pCount).toFixed(1))
+        : 0;
+      await Product.findByIdAndUpdate(prod._id, {
+        numReviews: pCount,
+        totalReviews: pCount,
+        reviewCount: pCount,
+        averageRating: pAvg
+      });
+    }
+
+    console.log('[Seed] Seeded initial reviews across all gadgets and synchronized product review counters');
     console.log('[Seed] Database successfully populated!');
     process.exit(0);
   } catch (err) {

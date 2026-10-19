@@ -8,6 +8,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const Review = require('../models/Review');
 const Product = require('../models/Product');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
+const { cleanCloudinaryImage } = require('../utils/cleanImage');
 
 // Configure Cloudinary credentials from environment
 cloudinary.config({
@@ -264,6 +265,19 @@ router.post('/', isAuthenticated, (req, res, next) => {
       flaggedBy: [],
       isRemoved: false
     });
+
+    // Recalculate targetProduct review counts and average rating
+    const activeReviews = await Review.find({ product: targetProduct._id, isRemoved: { $ne: true } });
+    const count = activeReviews.length;
+    const avg = count > 0
+      ? Number((activeReviews.reduce((sum, r) => sum + r.rating, 0) / count).toFixed(1))
+      : 0;
+
+    targetProduct.numReviews = count;
+    targetProduct.totalReviews = count;
+    targetProduct.reviewCount = count;
+    targetProduct.averageRating = avg;
+    await targetProduct.save();
 
     const populatedReview = await Review.findById(review._id)
       .populate('user', 'name avatarUrl bio')
@@ -587,6 +601,20 @@ router.post('/:id/flag', isAdmin, async (req, res) => {
 
     await review.save();
 
+    if (review.product) {
+      const activeReviews = await Review.find({ product: review.product, isRemoved: { $ne: true } });
+      const activeCount = activeReviews.length;
+      const avgRating = activeCount > 0
+        ? Number((activeReviews.reduce((sum, r) => sum + r.rating, 0) / activeCount).toFixed(1))
+        : 0;
+      await Product.findByIdAndUpdate(review.product, {
+        numReviews: activeCount,
+        totalReviews: activeCount,
+        reviewCount: activeCount,
+        averageRating: avgRating
+      });
+    }
+
     return res.json({
       success: true,
       message: review.isRemoved
@@ -628,7 +656,43 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
       });
     }
 
+    const productId = review.product;
     await Review.findByIdAndDelete(req.params.id);
+
+    // Clean up review images from Cloudinary if any
+    if (review.images && review.images.length > 0) {
+      for (const img of review.images) {
+        await cleanCloudinaryImage(img);
+      }
+    }
+
+    // Check remaining review count for this product
+    if (productId) {
+      const remainingReviews = await Review.find({ product: productId, isRemoved: { $ne: true } });
+      const remainingCount = remainingReviews.length;
+
+      if (remainingCount === 0) {
+        // Delete orphaned product from database and clean up its images
+        const product = await Product.findById(productId);
+        if (product) {
+          if (product.imageUrl) await cleanCloudinaryImage(product.imageUrl);
+          if (product.images && product.images.length > 0) {
+            for (const img of product.images) {
+              await cleanCloudinaryImage(img);
+            }
+          }
+          await Product.findByIdAndDelete(productId);
+        }
+      } else {
+        const avgRating = Number((remainingReviews.reduce((sum, r) => sum + r.rating, 0) / remainingCount).toFixed(1));
+        await Product.findByIdAndUpdate(productId, {
+          numReviews: remainingCount,
+          totalReviews: remainingCount,
+          reviewCount: remainingCount,
+          averageRating: avgRating
+        });
+      }
+    }
 
     return res.json({
       success: true,

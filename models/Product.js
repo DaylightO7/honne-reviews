@@ -39,6 +39,26 @@ const productSchema = new mongoose.Schema(
         type: String
       }
     ],
+    numReviews: {
+      type: Number,
+      default: 0,
+      min: [0, 'Review count cannot be negative']
+    },
+    totalReviews: {
+      type: Number,
+      default: 0,
+      min: [0, 'Review count cannot be negative']
+    },
+    reviewCount: {
+      type: Number,
+      default: 0,
+      min: [0, 'Review count cannot be negative']
+    },
+    averageRating: {
+      type: Number,
+      default: 0,
+      min: [0, 'Rating cannot be negative']
+    },
     specifications: [
       {
         key: { type: String, trim: true },

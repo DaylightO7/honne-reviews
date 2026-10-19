@@ -3,6 +3,7 @@ const router = express.Router();
 const Product = require('../models/Product');
 const Review = require('../models/Review');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
+const { cleanCloudinaryImage } = require('../utils/cleanImage');
 
 /**
  * @route   GET /api/products
@@ -11,31 +12,71 @@ const { isAuthenticated, isAdmin } = require('../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     const { category, search } = req.query;
-    let filter = {};
+
+    // Strict query condition: only products with verified reviews (> 0)
+    // Find all product IDs that currently have active, non-removed reviews
+    const activeProductIds = await Review.distinct('product', { isRemoved: { $ne: true } });
+
+    const conditions = [
+      {
+        $or: [
+          { numReviews: { $gt: 0 } },
+          { reviewCount: { $gt: 0 } },
+          { totalReviews: { $gt: 0 } },
+          { _id: { $in: activeProductIds } }
+        ]
+      }
+    ];
 
     if (category && category !== 'All') {
-      filter.category = category;
+      conditions.push({ category });
     }
 
     if (search && search.trim() !== '') {
       const searchRegex = { $regex: search.trim(), $options: 'i' };
-      filter.$or = [
-        { name: searchRegex },
-        { brand: searchRegex },
-        { category: searchRegex }
-      ];
+      conditions.push({
+        $or: [
+          { name: searchRegex },
+          { brand: searchRegex },
+          { category: searchRegex }
+        ]
+      });
     }
+
+    const filter = { $and: conditions };
 
     const products = await Product.find(filter).sort({ createdAt: -1 });
 
     // Compute live average rating and review count (ignoring removed reviews)
-    const productList = await Promise.all(
+    const rawProductList = await Promise.all(
       products.map(async (prod) => {
         const reviews = await Review.find({ product: prod._id, isRemoved: { $ne: true } }).sort({ createdAt: -1 });
         const reviewCount = reviews.length;
-        const avgRating = reviewCount > 0
-          ? Number((reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1))
-          : 0;
+
+        // If product has 0 active reviews, delete orphaned product record from MongoDB immediately
+        if (reviewCount === 0) {
+          try {
+            await Product.findByIdAndDelete(prod._id);
+            if (prod.imageUrl) {
+              await cleanCloudinaryImage(prod.imageUrl);
+            }
+          } catch (delErr) {
+            console.warn('Error removing orphaned product:', delErr.message);
+          }
+          return null;
+        }
+
+        const avgRating = Number((reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1));
+
+        // Sync stored counters on product if needed
+        if (prod.numReviews !== reviewCount || prod.totalReviews !== reviewCount || prod.reviewCount !== reviewCount || prod.averageRating !== avgRating) {
+          Product.findByIdAndUpdate(prod._id, {
+            numReviews: reviewCount,
+            totalReviews: reviewCount,
+            reviewCount: reviewCount,
+            averageRating: avgRating
+          }).catch(() => {});
+        }
 
         // Rank reviews by net score: likes - dislikes
         const scoredReviews = reviews.map(r => ({
@@ -76,10 +117,15 @@ router.get('/', async (req, res) => {
           description: bestSnippet,
           snippet: truncatedSnippet,
           averageRating: avgRating,
-          totalReviews: reviewCount
+          numReviews: reviewCount,
+          totalReviews: reviewCount,
+          reviewCount: reviewCount
         };
       })
     );
+
+    // Filter out nulls and any products with 0 reviews
+    const productList = rawProductList.filter(item => item !== null && (item.reviewCount > 0 || item.totalReviews > 0 || item.numReviews > 0));
 
     return res.json({
       success: true,
@@ -120,9 +166,22 @@ router.get('/:id', async (req, res) => {
       .sort({ createdAt: -1 });
 
     const totalReviews = reviews.length;
-    const avgRating = totalReviews > 0
-      ? Number((reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1))
-      : 0;
+    if (totalReviews === 0) {
+      try {
+        await Product.findByIdAndDelete(req.params.id);
+        if (product.imageUrl) {
+          await cleanCloudinaryImage(product.imageUrl);
+        }
+      } catch (delErr) {
+        console.warn('Error removing orphaned product:', delErr.message);
+      }
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found or has no verified reviews.'
+      });
+    }
+
+    const avgRating = Number((reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1));
 
     // Rating breakdown (1 to 5 stars)
     const breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -210,7 +269,9 @@ router.get('/:id', async (req, res) => {
         imageUrl: mainImageUrl,
         price: Number(product.price) || 0,
         averageRating: avgRating,
+        numReviews: totalReviews,
         totalReviews,
+        reviewCount: totalReviews,
         ratingBreakdown: breakdown,
         specifications: product.specifications || [],
         hasUserReviewed: !!userExistingReview,
@@ -344,8 +405,19 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
       });
     }
 
+    const reviews = await Review.find({ product: product._id });
+    for (const rev of reviews) {
+      if (rev.images && Array.isArray(rev.images)) {
+        for (const img of rev.images) {
+          await cleanCloudinaryImage(img);
+        }
+      }
+    }
     await Review.deleteMany({ product: product._id });
     await Product.findByIdAndDelete(req.params.id);
+    if (product.imageUrl) {
+      await cleanCloudinaryImage(product.imageUrl);
+    }
 
     return res.json({
       success: true,

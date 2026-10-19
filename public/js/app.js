@@ -65,7 +65,13 @@ async function loadProducts() {
     const res = await fetch(url, { credentials: 'include' });
     const data = await res.json();
 
-    if (!res.ok || !data.success || !data.data || data.data.length === 0) {
+    // Strictly filter out any products with 0 reviews
+    const products = (data && data.data ? data.data : []).filter(product => {
+      const count = product.numReviews ?? product.totalReviews ?? product.reviewCount ?? (product.reviews ? product.reviews.length : 0);
+      return count > 0;
+    });
+
+    if (!res.ok || !data.success || products.length === 0) {
       productGrid.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; color: #64748b;">
           <h3>No gadgets found</h3>
@@ -76,14 +82,16 @@ async function loadProducts() {
       return;
     }
 
-    const products = data.data;
     if (resultsCount) {
       resultsCount.textContent = `Showing ${products.length} product${products.length > 1 ? 's' : ''}`;
     }
 
     productGrid.innerHTML = '';
     products.forEach(product => {
-      productGrid.appendChild(createProductCard(product));
+      const card = createProductCard(product);
+      if (card) {
+        productGrid.appendChild(card);
+      }
     });
   } catch (err) {
     productGrid.innerHTML = `
@@ -96,6 +104,11 @@ async function loadProducts() {
 
 // Create Product Card DOM Element
 function createProductCard(product) {
+  const reviewCount = product.numReviews ?? product.totalReviews ?? product.reviewCount ?? (product.reviews ? product.reviews.length : 0);
+  if (!reviewCount || reviewCount <= 0) {
+    return null;
+  }
+
   const card = document.createElement('div');
   card.className = 'product-card';
 
