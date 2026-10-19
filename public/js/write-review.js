@@ -41,7 +41,7 @@ function renderNavbar() {
   if (typeof renderAuthNavbar === 'function') {
     renderAuthNavbar(navAuthContainer, currentUser);
   } else if (navAuthContainer && currentUser) {
-    navAuthContainer.innerHTML = `<span class="badge badge-dark">👤 ${escapeHtml(currentUser.name)}</span>`;
+    navAuthContainer.innerHTML = `<span class="badge badge-dark" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👤 ${escapeHtml(currentUser.name)}</span>`;
   }
 }
 

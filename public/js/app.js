@@ -37,9 +37,9 @@ function renderNavAuth() {
     renderAuthNavbar(navAuthContainer, currentAuthUser);
   } else if (navAuthContainer) {
     if (currentAuthUser) {
-      navAuthContainer.innerHTML = `<span class="badge badge-dark">👤 ${escapeHtml(currentAuthUser.name)}</span>`;
+      navAuthContainer.innerHTML = `<span class="badge badge-dark" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👤 ${escapeHtml(currentAuthUser.name)}</span>`;
     } else {
-      navAuthContainer.innerHTML = `<a href="login.html" class="btn btn-outline btn-sm">Sign In</a><a href="register.html" class="btn btn-primary btn-sm">Sign Up</a>`;
+      navAuthContainer.innerHTML = `<div style="display: flex; gap: 0.5rem; flex-wrap: nowrap;"><a href="login.html" class="btn btn-outline btn-sm" style="white-space: nowrap;">Sign In</a><a href="register.html" class="btn btn-primary btn-sm" style="white-space: nowrap;">Sign Up</a></div>`;
     }
   }
 }

@@ -94,6 +94,7 @@
       border-radius: var(--radius-sm);
       padding: 0.75rem 1rem;
       margin-bottom: 1rem;
+      flex-wrap: wrap;
     }
     .review-product-thumb {
       width: 48px;
@@ -136,6 +137,19 @@
       display: flex;
       gap: 0.5rem;
       margin-left: auto;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 640px) {
+      .review-product-header {
+        gap: 0.6rem;
+        padding: 0.75rem;
+      }
+      .review-action-btns {
+        width: 100%;
+        justify-content: flex-end;
+        margin-left: 0;
+        margin-top: 0.25rem;
+      }
     }
   </style>
 </head>

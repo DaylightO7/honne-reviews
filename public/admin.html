@@ -9,23 +9,25 @@
 <body style="background-color: #f8fafc;">
 
   <!-- Admin Top Navbar -->
-  <header class="navbar" style="border-bottom: 2px solid #0f172a;">
-    <div class="container nav-inner">
-      <div style="display:flex; align-items:center; gap: 1rem;">
+  <header class="navbar admin-header" style="border-bottom: 2px solid #0f172a;">
+    <div class="container nav-inner admin-nav">
+      <div class="admin-nav-brand">
         <a href="/index.html" class="logo-link"><img src="/images/logo.png" alt="Honne Reviews" class="navbar-logo"></a>
-        <span class="badge badge-danger" id="admin-badge-label">Admin Desk</span>
-        <a href="index.html" class="btn btn-outline btn-sm" target="_blank">
-          View Public Storefront ↗
-        </a>
+        <span class="badge badge-danger admin-badge" id="admin-badge-label">Admin Desk</span>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 1rem;">
-        <span id="admin-user-display" class="badge badge-dark" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+      <div class="admin-nav-actions">
+        <span id="admin-user-display" class="badge badge-dark admin-user-pill">
           Admin: Authenticating...
         </span>
-        <button id="admin-logout-btn" class="btn btn-outline btn-sm">
-          Sign Out
-        </button>
+        <div class="admin-nav-btns">
+          <a href="index.html" class="btn btn-outline btn-sm btn-view-storefront" target="_blank">
+            View Public Storefront ↗
+          </a>
+          <button id="admin-logout-btn" class="btn btn-outline btn-sm btn-admin-logout">
+            Sign Out
+          </button>
+        </div>
       </div>
     </div>
   </header>

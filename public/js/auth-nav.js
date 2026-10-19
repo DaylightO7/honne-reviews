@@ -22,15 +22,21 @@ function renderAuthNavbar(container, user) {
     const fallbackAttr = "this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'32\\' height=\\'32\\' viewBox=\\'0 0 24 24\\' fill=\\'%2394a3b8\\'><path d=\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\'/></svg>';";
 
     container.innerHTML = `
-      <div style="display:flex; align-items:center; gap: 0.75rem;">
-        <a href="write-review.html" class="btn btn-primary btn-sm" style="font-weight: 700;">+ Write Review</a>
-        ${isAdmin ? `<a href="admin.html" class="btn btn-outline btn-sm" style="border-color: #ef4444; color: #ef4444;">🛡️ Admin Desk</a>` : ''}
+      <div class="nav-auth-inner" style="display:flex; align-items:center; gap: 0.5rem; flex-wrap: nowrap;">
+        <a href="write-review.html" class="btn btn-primary btn-sm btn-nav-write" style="font-weight: 700; white-space: nowrap;">
+          <span class="nav-write-full">+ Write Review</span>
+          <span class="nav-write-short" style="display: none;">+ Review</span>
+        </a>
+        ${isAdmin ? `<a href="admin.html" class="btn btn-outline btn-sm btn-nav-admin" style="border-color: #ef4444; color: #ef4444; white-space: nowrap;">
+          <span class="admin-desk-full">🛡️ Admin Desk</span>
+          <span class="admin-desk-short" style="display: none;">🛡️ Admin</span>
+        </a>` : ''}
 
         <!-- Google-Style Profile Dropdown Trigger -->
         <div class="nav-profile-wrapper">
           <button type="button" class="btn-profile-trigger" id="profile-dropdown-btn" aria-haspopup="true" aria-expanded="false">
             <img src="${avatar}" alt="Avatar" class="nav-avatar-mini" onerror="${fallbackAttr}">
-            <span>${escapeHtml(user.name)}</span>
+            <span class="btn-profile-name">${escapeHtml(user.name)}</span>
             <span class="dropdown-arrow">▾</span>
           </button>
 
@@ -38,7 +44,7 @@ function renderAuthNavbar(container, user) {
           <div class="profile-dropdown-card hidden" id="profile-dropdown-menu">
             <div class="dropdown-account-header">
               <img src="${avatar}" alt="Avatar" class="dropdown-account-avatar" onerror="${fallbackAttr}">
-              <div style="overflow: hidden;">
+              <div style="overflow: hidden; min-width: 0;">
                 <div class="dropdown-account-name">${escapeHtml(user.name)}</div>
                 <div class="dropdown-account-email">${escapeHtml(user.email)}</div>
               </div>
@@ -93,8 +99,10 @@ function renderAuthNavbar(container, user) {
     });
   } else {
     container.innerHTML = `
-      <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
-      <a href="register.html" class="btn btn-primary btn-sm">Sign Up</a>
+      <div class="nav-auth-loggedout" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: nowrap;">
+        <a href="login.html" class="btn btn-outline btn-sm" style="white-space: nowrap;">Sign In</a>
+        <a href="register.html" class="btn btn-primary btn-sm" style="white-space: nowrap;">Sign Up</a>
+      </div>
     `;
   }
 }
